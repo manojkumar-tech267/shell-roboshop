@@ -34,7 +34,7 @@ VALIDATE $? "Enabling NodeJs 20 version"
 dnf install nodejs -y
 VALIDATE $? "Installing NodeJs"
 
-mkdir /app 
+mkdir -p /app 
 VALIDATE $? "Creating App directory"
 
 id roboshop 
