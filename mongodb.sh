@@ -1,12 +1,6 @@
 #!/bin/bash 
 userid=$(id -u)
 
-Log_Folder="/var/log/roboshop-logs"
-File_Name=$(echo $0 | cut -d "." -f1)
-Log_File=$Log_Folder/$File_Name.log
-
-mkdir -p $Log_Folder
-
 if [ $userid -ne 0 ]
 then 
     echo "You are not a root user please run with root access" | tee -a $Log_File
@@ -15,7 +9,11 @@ else
     echo "You are root user" | tee -a $Log_File
 fi 
 
+Log_Folder="/var/log/roboshop-logs"
+File_Name=$(echo $0 | cut -d "." -f1)
+Log_File=$Log_Folder/$File_Name.log
 
+mkdir -p $Log_Folder
 
 VALIDATE()
 {
