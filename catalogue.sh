@@ -22,6 +22,7 @@ VALIDATE()
     else 
         echo "$2 is not successful"
         exit 1
+    fi
 }
 
 dnf module disable nodejs -y
