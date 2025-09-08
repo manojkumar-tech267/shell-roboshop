@@ -3,6 +3,10 @@
 userid=$(id -u)
 Script_Dir=$PWD
 
+logs_folder="/var/log/roboshop-logs"
+script_file=$(echo $0 | cut -d "." -f1)
+log_file="$logs_Folder/$script_file.sh"
+
 if [ $userid -ne 0 ]
 then 
     echo "You are not a root user please run with root user access"
