@@ -1,6 +1,7 @@
 #!/bin/bash 
 
 userid=$(id -u)
+Script_Dir=$PWD
 
 if [ $userid -ne 0 ]
 then 
@@ -44,7 +45,7 @@ cd /usr/share/nginx/html
 unzip /tmp/frontend.zip
 VALIDATE $? "Extracting frontend code"
 
-cp nginx.conf /etc/nginx/nginx.conf
+cp $Script_Dir/nginx.conf /etc/nginx/nginx.conf
 VALIDATE $? "Copying nginx.conf file"
 
 systemctl restart nginx 
