@@ -1,6 +1,7 @@
 #!/bin/bash 
 
 userid=$(id -u)
+Script_Dir=$PWD
 
 if [ $userid -ne 0 ]
 then 
@@ -57,7 +58,7 @@ cd /app
 npm install
 VALIDATE $? "Installing NodeJs dependencies"
 
-cp catalogue.service /etc/systemd/system/catalogue.service
+cp $Script_Dir/catalogue.service /etc/systemd/system/catalogue.service
 VALIDATE $? "Copying catalogue service"
 
 systemctl daemon-reload
