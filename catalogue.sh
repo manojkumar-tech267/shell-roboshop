@@ -79,7 +79,7 @@ VALIDATE $? "Installing mongodb client"
 status=$(mongosh --host mongodb.cloudwithmanoj.online --eval 'db.getMongo().getDBNames().indexOf("catalogue")')
 if [ $status -lt 0 ]
 then
-    mongosh --host mongodb.cloudwithmanoj.online </app/db/master-data.js
+    mongosh --host mongodb.cloudwithmanoj.online </app/db/master-data.js &>> $logs_folder
     VALIDATE $? "Loading master data"
 else 
     echo "Data is already loaded we are skipping"
