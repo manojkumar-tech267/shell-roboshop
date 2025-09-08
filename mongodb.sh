@@ -10,6 +10,7 @@ else
 fi 
 
 Log_Folder="/var/log/roboshop-logs"
+mkdir -p $Log_Folder
 File_Name=$(echo $0 | cut -d "." -f1)
 Log_File=$Log_Folder/$File_Name.log
 
