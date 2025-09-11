@@ -1,72 +1,81 @@
 #!/bin/bash
 
+START_TIME=$(date +%s)
 userid=$(id -u)
-directory=$PWD
+R="\e[31m"
+G="\e[32m"
+Y="\e[33m"
+N="\e[0m"
+
+logs_folder="/var/log/roboshop-logs"
+script_name=$(echo $0 | cut -d "." -f1)
+log_file="$logs_folder/$script_name.log"
+script_dir=$PWD
+
+mkdir -p logs_folder
+echo "Script started executing at: $(date)" | tee -a $log_file
+
 if [ $userid -ne 0 ]
 then 
-    echo "you are not a root user please run with root user access"
+    echo -e "$R ERROR:: You are not a root user please run with root access $N" | tee -a $log_file
     exit 1 
 else 
-    echo "you are running with root user access"
-fi 
-
-log_folder="/var/log/roboshop-logs"
-script_name=$(echo $0 | cut -d "." -f1)
-log_file="$log_folder/$script_name.log"
-
-mkdir -p $log_folder
+    echo -e "$G you are running with root access $N" | tee -a $log_file
+fi
 
 VALIDATE()
 {
     if [ $1 -eq 0 ]
     then 
-        echo "$2 success" | tee -a $log_folder
+        echo -e "$G $2 is success $N" | tee -a $log_file
     else 
-        echo "$2 failure" | tee -a $log_folder
+        echo -e "$R $2 is failure $N" | tee -a $log_file
         exit 1 
     fi
 }
 
-dnf module disable nodejs -y &>> $log_folder
-VALIDATE $? "Disabling NodeJs"
+dnf module disable nodejs -y &>> $log_file
+VALIDATE $? "Disabling Nodejs"
 
-dnf module enable nodejs:20 -y &>> $log_folder
-VALIDATE $? "Enabling NodeJs"
+dnf module enable nodejs:20 -y &>> $log_file
+VALIDATE $? "Enabling Nodejs"
 
-dnf install nodejs -y &>> $log_folder
-VALIDATE $? "Installing NodeJs"
+dnf install nodejs -y &>> $log_file
+VALIDATE $? "Installing Nodejs"
 
-mkdir /app 
-VALIDATE $? "creating app directory"
+mkdir -p /app 
+VALIDATE $? "Creating app directory"
 
-id roboshop  &>> $log_folder
+id roboshop 
 if [ $? -ne 0 ]
 then 
-    useradd --system --home /app --shell /sbin/nologin --comment "roboshop system user" roboshop
-    VALIDATE $? "Create roboshop user"
+    useradd --system --home /app --shell /sbin/nologin --comment "roboshop system user" roboshop &>> $log_file
+    VALIDATE $? "Creating roboshop system user"
 else 
-    echo "User is already there we are skipping!!!"
+    echo "User is already there we are skipping" | tee -a $log_file
 fi 
 
-curl -L -o /tmp/user.zip https://roboshop-artifacts.s3.amazonaws.com/user-v3.zip &>> $log_folder
+curl -L -o /tmp/user.zip https://roboshop-artifacts.s3.amazonaws.com/user-v3.zip &>> $log_file
 VALIDATE $? "Downloading user code"
 
 rm -rf /app/*
 cd /app 
-unzip /tmp/user.zip &>> $log_folder
-VALIDATE $? "Extracting user code"
+unzip /tmp/user.zip &>> $log_file
+VALIDATE $? "Extracting user files"
 
-npm install  &>> $log_folder
-VALIDATE $? "Downloading NodeJs Dependencies"
+npm install &>> $log_file
+VALIDATE $? "Installing Nodejs dependencies"
 
-cp $directory/user.service /etc/systemd/system/user.service
-VALIDATE $? "copying user.service file"
+cp $script_dir/user.service /etc/systemd/system/user.service
+VALIDATE $? "Copying user.service file"
 
-systemctl daemon-reload &>> $log_folder
+systemctl daemon-reload &>> $log_file
 VALIDATE $? "Reload user service"
 
-systemctl enable user | tee -a $log_folder
-systemctl start user | tee -a $log_folder
+systemctl enable user &>> $log_file
+systemctl start user &>> $log_file
 VALIDATE $? "Start and Enable user"
 
-
+END_TIME=$(date +%s)
+TOTAL_TIME=$((END_TIME-START_TIME))
+echo "Script completed execution successfully time taken is $TOTAL_TIME seconds" | tee -a $log_file

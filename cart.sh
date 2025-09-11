@@ -1,73 +1,82 @@
-#!/bin/bash 
+#!/bin/bash
 
+START_TIME=$(date +%s)
 userid=$(id -u)
+script_dir=$PWD
+
+R="\e[31m"
+G="\e[32m"
+Y="\e[33m"
+N="\e[0m"
 
 if [ $userid -ne 0 ]
 then 
-    echo "you are not a root user please run with root access"
+    echo -e "$R You are not a root user please run with root access $N"
     exit 1 
 else 
-    echo "you are running with root access"
+    echo -e "$G you are running with root access $N"
 fi 
 
-directory=$PWD
-
-log_folder="/var/log/roboshop-logs"
+logs_folder="/var/log/roboshop-logs"
 script_name=$(echo $0 | cut -d "." -f1)
-log_file="$log_folder/$script_name.log"
+log_file="$logs_folder/$script_name.log"
 
-mkdir -p $log_folder
+mkdir -p logs_folder
+echo "Script started executing at: $(date)" | tee -a $log_file
 
 VALIDATE()
 {
     if [ $1 -eq 0 ]
     then 
-        echo "$2 is success" | tee -a $log_folder
+        echo -e "$G $2 is success $N" | tee -a $log_file
     else 
-        echo "$2 is failure" | tee -a $log_folder
+        echo -e "$R $2 is failure $N" | tee -a $log_file
         exit 1 
     fi
 }
 
-dnf module disable nodejs -y &>> $log_folder
-VALIDATE $? "disabling nodejs"
+dnf module disable nodejs -y &>> $log_file
+VALIDATE $? "Disabling Nodejs"
 
-dnf module enable nodejs:20 -y &>> $log_folder
-VALIDATE $? "enabling nodejs"
+dnf module enable nodejs:20 -y &>> $log_file
+VALIDATE $? "Enabling Nodejs"
 
-dnf install nodejs -y &>> $log_folder
-VALIDATE $? "installing nodejs"
+dnf install nodejs -y &>> $log_file
+VALIDATE $? "Installing Nodejs"
 
-mkdir /app 
+mkdir -p /app 
 VALIDATE $? "Creating app directory"
 
-id roboshop  &>> $log_folder
+id roboshop &>> $log_file
 if [ $? -ne 0 ]
 then 
     useradd --system --home /app --shell /sbin/nologin --comment "roboshop system user" roboshop
     VALIDATE $? "Creating roboshop user"
 else 
-    echo "User roboshop is already there we are skipping"
+    echo -e "$Y User is already there we are skipping $N" | tee -a $log_file
 fi 
 
-curl -L -o /tmp/cart.zip https://roboshop-artifacts.s3.amazonaws.com/cart-v3.zip &>> $log_folder
+curl -L -o /tmp/cart.zip https://roboshop-artifacts.s3.amazonaws.com/cart-v3.zip &>> $log_file
 VALIDATE $? "Downloading cart code"
 
 rm -rf /app/*
-cd /app
-unzip /tmp/cart.zip &>> $log_folder
-VALIDATE $? "Extracting cart"
+cd /app 
+unzip /tmp/cart.zip &>> $log_file
+VALIDATE $? "unzipping cart files"
 
-npm install  &>> $log_folder
-VALIDATE $? "installing nodejs dependencies"
+npm install &>> $log_file
+VALIDATE $? "Installing Nodejs dependencies"
 
-cp $directory/cart.service /etc/systemd/system/cart.service
-VALIDATE $? "copying cart.service file"
+cp $script_dir/cart.service /etc/systemd/system/cart.service
+VALIDATE $? "Copying cart.service file"
 
-systemctl daemon-reload &>> $log_folder
-VALIDATE $? "reload cart service"
+systemctl daemon-reload &>> $log_file
+VALIDATE $? "Reloading cart service"
 
-systemctl enable cart  &>> $log_folder
-systemctl start cart &>> $log_folder
-VALIDATE $? "start and enable cart"
+systemctl enable cart &>> $log_file
+systemctl start cart &>> $log_file
+VALIDATE $? "Start and enable cart"
 
+END_TIME=$(date +%s)
+TOTAL_TIME=$((END_TIME-START_TIME))
+echo "Script completed execution successfully time taken is $TOTAL_TIME seconds" | tee -a $log_file

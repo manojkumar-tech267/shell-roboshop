@@ -1,5 +1,6 @@
 #!/bin/bash
 
+START_TIME=$(date +%s)
 userid=$(id -u)
 script_dir=$PWD
 
@@ -43,7 +44,7 @@ VALIDATE $? "Enabling Nodejs:20 version"
 dnf install nodejs -y &>> $log_file
 VALIDATE $? "Installing NodeJs"
 
-mkdir /app 
+mkdir -p /app 
 VALIDATE $? "Creating App directory"
 
 id roboshop
@@ -91,5 +92,9 @@ then
 else 
     echo -e "$Y Data is already loaded we are skipping $N" 
 fi 
+
+END_TIME=$(date +%s)
+TOTAL_TIME=$((END_TIME-START_TIME))
+echo "Script completed execution successfully time taken is $TOTAL_TIME seconds" | tee -a $log_file
 
 

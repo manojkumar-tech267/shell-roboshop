@@ -1,39 +1,55 @@
 #!/bin/bash
 
-userid =$(id -u)
+START_TIME=$(date +%s)
+userid=$(id -u)
+script_dir=$PWD
+
+R="\e[31m"
+G="\e[32m"
+Y="\e[33m"
+N="\e[0m"
 
 if [ $userid -ne 0 ]
 then 
-    echo "you are not a root user please run with root user access"
+    echo -e "$R You are not a root user please run with root access $N"
     exit 1 
 else 
-    echo "You are running with root user access"
+    echo -e "$G you are running with root access $N"
 fi 
 
-log_folder="/var/log/roboshop-logs"
-script_name=$(echo $0 | cut -d "." -f1)
-log_file="$log_folder/$script_name.log"
 
-mkdir -p $log_folder
+logs_folder="/var/log/roboshop-logs"
+script_name=$(echo $0 | cut -d "." -f1)
+log_file="$logs_folder/$script_name.log"
+
+mkdir -p logs_folder
+echo "Script started executing at: $(date)" | tee -a $log_file
+
+echo "Please enter root password to setup"
+read -s mysql_root_password
+
 
 VALIDATE()
 {
     if [ $1 -eq 0 ]
     then 
-        echo "$2 is success"
+        echo -e "$G $2 is success $N" | tee -a $log_file
     else 
-        echo "$2 is failure"
+        echo -e "$R $2 is failure $N" | tee -a $log_file
         exit 1 
     fi
 }
 
-read -s password
 dnf install mysql-server -y &>> $log_file
-VALIDATE $? "Installing mysql server"
+VALIDATION $? "Installing mysql server"
 
 systemctl enable mysqld &>> $log_file
 systemctl start mysqld  &>> $log_file
-VALIDATE $? "Enable and start mysqld"
+VALIDATION $? "Start and Enable mysql"
 
-mysql_secure_installation --set-root-pass $password
-VALIDATE $? "changing the default password"
+mysql_secure_installation --set-root-pass $mysql_root_password &>> $log_file
+VALIDATION $? "Changing mysql root password"
+
+END_TIME=$(date +%s)
+TOTAL_TIME=$((END_TIME-START_TIME))
+echo "Script completed execution successfully time taken is $TOTAL_TIME seconds" | tee -a $log_file
