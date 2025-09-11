@@ -1,86 +1,95 @@
-#!/bin/bash 
+#!/bin/bash
 
 userid=$(id -u)
-script_dir=$PWD 
+script_dir=$PWD
 
-logs_folder="/var/log/roboshop-logs"
-script_name=$(echo $0 | cut -d "." -f1)
-log_file="$logs_folder/$script_name.sh"
-
-mkdir -p logs_folder
+R="\e[31m"
+G="\e[32m"
+Y="\e[33m"
+N="\e[0m"
 
 if [ $userid -ne 0 ]
 then 
-    echo "You are not a root user Please run with root access!!!" | tee -a $logs_folder
+    echo -e "$R You are not a root user please run with root access $N"
     exit 1 
 else 
-    echo "You are running with root user access" | tee -a $logs_folder
+    echo -e "$G you are running with root access $N"
 fi 
+
+logs_folder="/var/log/roboshop-logs"
+script_name=$(echo $0 | cut -d "." -f1)
+log_file="$logs_folder/$script_name.log"
+
+mkdir -p logs_folder
+echo "Script started executing at: $(date)" | tee -a $log_file
 
 VALIDATE()
 {
     if [ $1 -eq 0 ]
     then 
-        echo "$2 is success" | tee -a $logs_folder
+        echo -e "$G $2 is success $N" 
     else 
-        echo "$2 is failed" | tee -a $logs_folder
+        echo -e "$R $2 is failure $N"
         exit 1 
     fi
 }
 
-dnf module disable nodejs -y &>> $logs_folder
-VALIDATE $? "Disabling Nodejs"
+dnf module disable nodejs -y &>> $log_file
+VALIDATE $? "Disabling nodejs"
 
-dnf module enable nodejs:20 -y &>> $logs_folder
-VALIDATE $? "Enabling Nodejs"
+dnf module enable nodejs:20 -y &>> $log_file
+VALIDATE $? "Enabling Nodejs:20 version"
 
-dnf install nodejs -y &>> $logs_folder
+dnf install nodejs -y &>> $log_file
 VALIDATE $? "Installing NodeJs"
 
-mkdir -p /app
+mkdir /app 
 VALIDATE $? "Creating App directory"
 
-id roboshop 
+id roboshop
 if [ $? -ne 0 ]
 then 
-    useradd --system --home /app --shell /sbin/nologin --comment "roboshop system user" roboshop
-    VALIDATE $? "Created roboshop user"
+    useradd --system --home /app --shell /sbin/nologin --comment "roboshop system user" roboshop &>> $log_file
+    VALIDATE $? "Creating roboshop user"
 else 
-    echo "Roboshop user is already there we are skipping" | tee -a $logs_folder
+    echo -e "$G roboshop user is already created $N"
 fi 
 
-curl -o /tmp/catalogue.zip https://roboshop-artifacts.s3.amazonaws.com/catalogue-v3.zip  &>> $logs_folder
+curl -o /tmp/catalogue.zip https://roboshop-artifacts.s3.amazonaws.com/catalogue-v3.zip &>> $log_file
 VALIDATE $? "Downloading catalogue code"
 
 rm -rf /app/*
-cd /app
-unzip /tmp/catalogue.zip &>> $logs_folder
-VALIDATE $? "unzipping catalogue"
+cd /app 
+unzip /tmp/catalogue.zip &>> $log_file
+VALIDATE $? "Extracting catalogue code files"
 
-npm install &>> $logs_folder
-VALIDATE $? "Installing NodeJs dependencies"
+npm install &>> $log_file
+VALIDATE $? "Installing Nodejs Dependencies"
 
 cp $script_dir/catalogue.service /etc/systemd/system/catalogue.service
-VALIDATE $? "Copying catalogue.service file"
+VALIDATE $? "copying catalogue.service file"
 
-systemctl daemon-reload &>> $logs_folder
+systemctl daemon-reload &>> $log_file
 VALIDATE $? "Reload catalogue service"
 
-systemctl enable catalogue 
-systemctl start catalogue
-VALIDATE $? "Enable and start catalogue"
+systemctl enable catalogue &>> $log_file
+systemctl start catalogue &>> $log_file
+VALIDATE $? "Start and Enable catalogue"
 
 cp $script_dir/mongo.repo /etc/yum.repos.d/mongo.repo
-VALIDATE $? "Copy mongo.repo file"
+VALIDATE $? "Copying mongo.repo file"
 
-dnf install mongodb-mongosh -y &>> $logs_folder
-VALIDATE $? "Installing mongodb client"
+dnf install mongodb-mongosh -y &>> $log_file
+VALIDATE $? "Installing Mongodb client"
 
-status=$(mongosh --host mongodb.cloudwithmanoj.online --eval 'db.getMongo().getDBNames().indexOf("catalogue")')
+status = $(mongosh --host mongodb.cloudwithmanoj.online --eval 'db.getMongo().getDBNames().indexOf("catalogue")')
+
 if [ $status -lt 0 ]
-then
-    mongosh --host mongodb.cloudwithmanoj.online </app/db/master-data.js &>> $logs_folder
+then 
+    mongosh --host mongodb.cloudwithmanoj.online </app/db/master-data.js &>> $log_file
     VALIDATE $? "Loading master data"
 else 
-    echo "Data is already loaded we are skipping"
-fi
+    echo -e "$Y Data is already loaded we are skipping $N" 
+fi 
+
+
