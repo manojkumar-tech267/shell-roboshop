@@ -83,9 +83,9 @@ VALIDATE $? "Copying mongo.repo file"
 dnf install mongodb-mongosh -y &>> $log_file
 VALIDATE $? "Installing Mongodb client"
 
-status = $(mongosh --host mongodb.cloudwithmanoj.online --eval 'db.getMongo().getDBNames().indexOf("catalogue")')
+STATUS = $(mongosh --host mongodb.cloudwithmanoj.online --eval 'db.getMongo().getDBNames().indexOf("catalogue")')
 
-if [ $status -lt 0 ]
+if [ $STATUS -lt 0 ]
 then 
     mongosh --host mongodb.cloudwithmanoj.online </app/db/master-data.js &>> $log_file
     VALIDATE $? "Loading master data"
