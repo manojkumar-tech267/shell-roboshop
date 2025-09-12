@@ -16,10 +16,10 @@ mkdir -p $logs_folder
 
 if [ $userid -ne 0 ]
 then 
-    echo -e "$R You are not a root user please run with root access $N"
+    echo -e "$RYou are not a root user please run with root access $N"
     exit 1 
 else 
-    echo -e "$G you are running with root access $N"
+    echo -e "$Gyou are running with root access $N"
 fi 
 
 echo "Script started executing at: $(date)" | tee -a $log_file
@@ -28,9 +28,9 @@ VALIDATE()
 {
     if [ $1 -eq 0 ]
     then 
-        echo -e "$G $2 is success $N" 
+        echo -e "$G$2 is success $N" 
     else 
-        echo -e "$R $2 is failure $N"
+        echo -e "$R$2 is failure $N"
         exit 1 
     fi
 }
