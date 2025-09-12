@@ -16,10 +16,10 @@ mkdir -p $logs_folder
 
 if [ $userid -ne 0 ]
 then 
-    echo -e "$RYou are not a root user please run with root access $N"
+    echo -e "$R You are not a root user please run with root access $N"
     exit 1 
 else 
-    echo -e "$Gyou are running with root access $N"
+    echo -e "$G You are running with root access $N"
 fi 
 
 echo "Script started executing at: $(date)" | tee -a $log_file
