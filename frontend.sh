@@ -57,8 +57,6 @@ cd /usr/share/nginx/html
 unzip /tmp/frontend.zip &>> $log_file
 VALIDATE $? "Extracting Frontend code"
 
-rm -rf /etc/nginx/nginx.conf &>> $log_file
-VALIDATE $? "Removing default nginx content"
 
 cp $script_dir/nginx.conf /etc/nginx/nginx.conf
 VALIDATE $? "Copying nginx.conf file"
