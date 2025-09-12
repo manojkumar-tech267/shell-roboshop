@@ -46,7 +46,7 @@ VALIDATE $? "Installing Nodejs"
 mkdir -p /app 
 VALIDATE $? "Creating app directory"
 
-id roboshop 
+id roboshop &>> $log_file
 if [ $? -ne 0 ]
 then 
     useradd --system --home /app --shell /sbin/nologin --comment "roboshop system user" roboshop &>> $log_file
