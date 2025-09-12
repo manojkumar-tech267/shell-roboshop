@@ -1,67 +1,94 @@
-#!/bin/bash 
+#!/bin/bash
 
+START_TIME=$(date +%s)
 userid=$(id -u)
-directory=$PWD
+script_dir=$PWD
+
+R="\e[31m"
+G="\e[32m"
+Y="\e[33m"
+N="\e[0m"
 
 if [ $userid -ne 0 ]
 then 
-    echo "You are not a root user please run with root access"
+    echo -e "$R You are not a root user please run with root access $N"
     exit 1 
 else 
-    echo "You are running with root user access"
+    echo -e "$G you are running with root access $N"
 fi 
+
+logs_folder="/var/log/roboshop-logs"
+script_name=$(echo $0 | cut -d "." -f1)
+log_file="$logs_folder/$script_name.log"
+
+mkdir -p $logs_folder
+echo "Script started executing at: $(date)" | tee -a $log_file
+
+echo "Please enter mysql root password to setup"
+read -s mysql_root_password
 
 VALIDATE()
 {
     if [ $1 -eq 0 ]
     then 
-        echo "$2 is success"
+        echo -e "$G $2 is success $N" | tee -a $log_file
     else 
-        echo "$2 is failure"
+        echo -e "$R $2 is failure $N" | tee -a $log_file
         exit 1 
+    fi
 }
 
-read -s MYSQL_ROOT_PASSWORD
-dnf install maven -y
+dnf install maven -y &>> $log_file 
+VALIDATE $? "Installing maven"
 
-mkdir /app 
+mkdir -p /app 
+VALIDATE $? "creating app directory"
 
-id roboshop 
+id roboshop &>> $log_file
 if [ $? -ne 0 ]
 then 
-    useradd --system --home /app --shell /sbin/nologin --comment "roboshop system user" roboshop
-    VALIDATE $? "Creating roboshop user"
+    useradd --system --home /app --shell /sbin/nologin --comment "roboshop system user" roboshop &>> $log_file
+    VALIDATE $? "Creating roboshop user" 
 else 
-    echo "User roboshop is already there we are skipping"
+    echo "User is already created we are skipping"
 fi 
 
-curl -L -o /tmp/shipping.zip https://roboshop-artifacts.s3.amazonaws.com/shipping-v3.zip
+curl -L -o /tmp/shipping.zip https://roboshop-artifacts.s3.amazonaws.com/shipping-v3.zip &>> $log_file
+VALIDATE $? "Downloading shipping code"
 
 rm -rf /app/*
-cd /app
-unzip /tmp/shipping.zip
+cd /app 
+unzip /tmp/shipping.zip &>> $log_file
+VALIDATE $? "Extracting shipping files"
 
-mvn clean package 
-mv target/shipping-1.0.jar shipping.jar
+mvn clean package &>> $log_file 
+VALIDATE $? "Installing Java dependencies"
 
-cp $directory/shipping.service /etc/systemd/system/shipping.service
+mv target/shipping-1.0.jar shipping.jar &>> $log_file
+VALIDATE $? "Renaming to shipping.jar"
 
-systemctl daemon-reload
+cp $script_dir/shipping.service /etc/systemd/system/shipping.service
+VALIDATE $? "Copying shipping.service file"
 
-systemctl enable shipping 
-systemctl start shipping
+systemctl daemon-reload &>> $log_file
+VALIDATE $? "Reloading shipping service"
 
-dnf install mysql -y 
+systemctl enable shipping &>> $log_file
+systemctl start shipping &>> $log_file
+VALIDATE $? "Start and Enable shipping"
 
-mysql -h mysql.cloudwithmanoj.online -u root -p$MYSQL_ROOT_PASSWORD -e 'use cities'
+dnf install mysql -y &>> $log_file
+VALIDATE $? "Installing mysql"
 
+mysql -h mysql.cloudwithmanoj.online -u root -p$mysql_root_password -e 'use cities' &>> $log_file
 if [ $? -ne 0 ]
 then 
-    mysql -h mysql.cloudwithmanoj.online -uroot -pRoboShop@1 < /app/db/schema.sql
-    mysql -h mysql.cloudwithmanoj.online -uroot -pRoboShop@1 < /app/db/app-user.sql 
-    mysql -h mysql.cloudwithmanoj.online -uroot -pRoboShop@1 < /app/db/master-data.sql
-    VALIDATE $? "Loading data in to mysql"
-else 
-    echo "Data is already loaded in to mysql"
+    mysql -h mysql.cloudwithmanoj.online -uroot -p$mysql_root_password < /app/db/schema.sql &>> $log_file
+    mysql -h mysql.cloudwithmanoj.online -uroot -p$mysql_root_password < /app/db/app-user.sql &>> $log_file
+    mysql -h mysql.cloudwithmanoj.online -uroot -p$mysql_root_password < /app/db/master-data.sql &>> $log_file
+else
+    echo "Data is already loaded we are skipping"
+fi 
 
-systemctl restart shipping
+systemctl restart shipping &>> $log_file
+VALIDATE $? "Restarting shipping"
