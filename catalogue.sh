@@ -83,7 +83,7 @@ VALIDATE $? "Copying mongo.repo file"
 dnf install mongodb-mongosh -y &>> $log_file
 VALIDATE $? "Installing Mongodb client"
 
-STATUS = $(mongosh --host mongodb.cloudwithmanoj.online --eval 'db.getMongo().getDBNames().indexOf("catalogue")')
+STATUS=$(mongosh --host mongodb.cloudwithmanoj.online --eval 'db.getMongo().getDBNames().indexOf("catalogue")')
 
 if [ $STATUS -lt 0 ]
 then 
