@@ -92,3 +92,8 @@ fi
 
 systemctl restart shipping &>> $log_file
 VALIDATE $? "Restarting shipping"
+
+END_TIME=$(date +%s)
+TOTAL_TIME=$(( $END_TIME - $START_TIME ))
+
+echo -e "Script exection completed successfully, $Y time taken: $TOTAL_TIME seconds $N" | tee -a $log_file  
