@@ -8,19 +8,20 @@ G="\e[32m"
 Y="\e[33m"
 N="\e[0m"
 
-if [ $userid -ne 0 ]
-then 
-    echo -e "$R You are not a root user please run with root access $N"
-    exit 1 
-else 
-    echo "$G you are running with root access $N"
-fi 
-
 logs_folder="/var/log/roboshop-logs"
 script_name=$(echo $0 | cut -d "." -f1)
 log_file="$logs_folder/$script_name.log"
 
 mkdir -p logs_folder
+
+if [ $userid -ne 0 ]
+then 
+    echo -e "$R You are not a root user please run with root access $N"
+    exit 1 
+else 
+    echo -e "$G you are running with root access $N"
+fi 
+
 echo "Script started executing at: $(date)" | tee -a $log_file
 
 VALIDATE()
