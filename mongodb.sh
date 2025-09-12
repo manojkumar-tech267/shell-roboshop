@@ -12,7 +12,7 @@ logs_folder="/var/log/roboshop-logs"
 script_name=$(echo $0 | cut -d "." -f1)
 log_file="$logs_folder/$script_name.log"
 
-mkdir -p logs_folder
+mkdir -p $logs_folder
 
 if [ $userid -ne 0 ]
 then 
